@@ -2,6 +2,8 @@ package main
 
 import (
   "net/http"
+  "fmt"
+  "html/template"
   "chitchat/data"
 )
 
@@ -9,18 +11,31 @@ import (
 // shows the error message page
 func err(writer http.ResponseWriter, request *http.Request) {
   vals := request.URL.Query()
-  t := parseTemplateFiles("layout", "public.navbar", "error")
+  _, err := session(writer, request)
+  var t *template.Template
+  if err != nil {
+    t = parseTemplateFiles("layout", "public.navbar", "error")
+  } else {
+    t = parseTemplateFiles("layout", "private.navbar", "error")
+  }  
   t.Execute(writer, vals.Get("msg")) 
 }
 
 // GET /
 // index page
 func index(writer http.ResponseWriter, request *http.Request) {
-  loggedin(writer, request)
-  t := parseTemplateFiles("layout", "public.navbar", "index")
-  conversations, err := data.Conversations(); if err != nil {
-    error_message(writer, request, "Cannot get conversations")
+  sess, err := session(writer, request)
+  var t *template.Template
+  if err != nil {
+    t = parseTemplateFiles("layout", "public.navbar", "index")
   } else {
-    t.Execute(writer, conversations)
+    fmt.Println(sess)
+    t = parseTemplateFiles("layout", "private.navbar", "index")
+  }  
+
+  threads, err := data.Threads(); if err != nil {
+    error_message(writer, request, "Cannot get threads")
+  } else {
+    t.Execute(writer, threads)
   }  
 }

@@ -9,6 +9,7 @@ import (
   "net/http"
   "chitchat/data"
   "strings"
+  "errors"
 )
 
 
@@ -55,15 +56,14 @@ func error_message(writer http.ResponseWriter, request *http.Request, msg string
   http.Redirect(writer, request, strings.Join(url, ""), 302)
 }
 
-// Checks if the user is logged in
-func loggedin(writer http.ResponseWriter, request *http.Request)(session data.Session){
+
+// Checks if the user is logged in and has a session, if not err is not nil
+func session(writer http.ResponseWriter, request *http.Request)(sess data.Session, err error){
   cookie, err := request.Cookie("_cookie")
-  if err == http.ErrNoCookie {
-    http.Redirect(writer, request, "/login", 302)
-  } else {
-    session = data.Session{Uuid: cookie.Value}
-    if ok, _ := session.Check(); !ok {
-      http.Redirect(writer, request, "/login", 302)
+  if err == nil {
+    sess = data.Session{Uuid: cookie.Value}
+    if ok, _ := sess.Check(); !ok {
+      err = errors.New("Invalid session")
     }
   }  
   return

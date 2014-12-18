@@ -4,7 +4,7 @@ import(
   "time"
 )
 
-type Conversation struct {
+type Thread struct {
   Id        int
   Uuid      string
   Topic     string
@@ -17,13 +17,13 @@ type Reply struct {
   Uuid           string
   Body           string
   UserId         int
-  ConversationId int
+  ThreadId int
   CreatedAt      time.Time
 }
 
 // format the CreatedAt date to display nicely on the screen
-func (conversation *Conversation) CreatedAtDate() string {
-	return conversation.CreatedAt.Format("Jan 2, 2006 at 3:04pm")
+func (thread *Thread) CreatedAtDate() string {
+	return thread.CreatedAt.Format("Jan 2, 2006 at 3:04pm")
 }
 
 func (reply *Reply) CreatedAtDate() string {
@@ -31,11 +31,11 @@ func (reply *Reply) CreatedAtDate() string {
 }
 
 
-// get the number of replies in a conversation
-func (conversation *Conversation) NumReplies() (count int) {
+// get the number of replies in a thread
+func (thread *Thread) NumReplies() (count int) {
   db := db()
   defer db.Close()  
-  rows, err := db.Query("SELECT count(*) FROM replies where conversation_id = $1", conversation.Id)
+  rows, err := db.Query("SELECT count(*) FROM replies where thread_id = $1", thread.Id)
   if err != nil {
     return
   }
@@ -48,17 +48,17 @@ func (conversation *Conversation) NumReplies() (count int) {
   return  
 }
 
-// get replies to a conversation
-func (conversation *Conversation) Replies() (replies []Reply, err error) {
+// get replies to a thread
+func (thread *Thread) Replies() (replies []Reply, err error) {
   db := db()
   defer db.Close()  
-  rows, err := db.Query("SELECT id, uuid, body, user_id, conversation_id, created_at FROM replies where conversation_id = $1", conversation.Id)
+  rows, err := db.Query("SELECT id, uuid, body, user_id, thread_id, created_at FROM replies where thread_id = $1", thread.Id)
   if err != nil {
     return
   }
   for rows.Next() {
     reply := Reply{}
-    if err = rows.Scan(&reply.Id, &reply.Uuid, &reply.Body, &reply.UserId, &reply.ConversationId, &reply.CreatedAt); err != nil {
+    if err = rows.Scan(&reply.Id, &reply.Uuid, &reply.Body, &reply.UserId, &reply.ThreadId, &reply.CreatedAt); err != nil {
       return
     }
     replies = append(replies, reply)
@@ -67,11 +67,11 @@ func (conversation *Conversation) Replies() (replies []Reply, err error) {
   return  
 }
 
-// Create a new conversation 
-func (user *User) CreateConversation(topic string) (conv Conversation, err error) {
+// Create a new thread 
+func (user *User) CreateThread(topic string) (conv Thread, err error) {
   db := db()
   defer db.Close()
-  statement := "insert into conversations (uuid, topic, user_id, created_at) values ($1, $2, $3, $4) returning id, uuid, topic, user_id, created_at"
+  statement := "insert into threads (uuid, topic, user_id, created_at) values ($1, $2, $3, $4) returning id, uuid, topic, user_id, created_at"
   stmt, err := db.Prepare(statement)
   if err != nil {
     return
@@ -87,60 +87,60 @@ func (user *User) CreateConversation(topic string) (conv Conversation, err error
 
 
 
-// Create a new reply to a conversation
-func (user *User) CreateReply(conv Conversation, body string) (reply Reply, err error) {
+// Create a new reply to a thread
+func (user *User) CreatePost(conv Thread, body string) (reply Reply, err error) {
   db := db()
   defer db.Close()
-  statement := "insert into replies (uuid, body, user_id, conversation_id, created_at) values ($1, $2, $3, $4, $5) returning id, uuid, body, user_id, conversation_id, created_at"
+  statement := "insert into replies (uuid, body, user_id, thread_id, created_at) values ($1, $2, $3, $4, $5) returning id, uuid, body, user_id, thread_id, created_at"
   stmt, err := db.Prepare(statement)
   if err != nil {
     return
   }
   defer stmt.Close()
   // use QueryRow to return a row and scan the returned id into the Session struct
-  err = stmt.QueryRow(createUUID(), body, user.Id, conv.Id, time.Now()).Scan(&reply.Id, &reply.Uuid, &reply.Body, &reply.UserId, &reply.ConversationId, &reply.CreatedAt)
+  err = stmt.QueryRow(createUUID(), body, user.Id, conv.Id, time.Now()).Scan(&reply.Id, &reply.Uuid, &reply.Body, &reply.UserId, &reply.ThreadId, &reply.CreatedAt)
   if err != nil {
     return
   }    
   return
 }
 
-// Get all conversations in the database and returns it
-func Conversations() (conversations []Conversation, err error){
+// Get all threads in the database and returns it
+func Threads() (threads []Thread, err error){
   db := db()
   defer db.Close()  
-  rows, err := db.Query("SELECT id, uuid, topic, user_id, created_at FROM conversations ORDER BY created_at DESC")
+  rows, err := db.Query("SELECT id, uuid, topic, user_id, created_at FROM threads ORDER BY created_at DESC")
   if err != nil {
     return
   }
   for rows.Next() {
-    conv := Conversation{}
+    conv := Thread{}
     if err = rows.Scan(&conv.Id, &conv.Uuid, &conv.Topic, &conv.UserId, &conv.CreatedAt); err != nil {
       return
     }
-    conversations = append(conversations, conv)
+    threads = append(threads, conv)
   }
   rows.Close()
   return
 }
 
-// Get a conversation by the UUID
-func ConversationByUUID(uuid string) (conv Conversation, err error) {
+// Get a thread by the UUID
+func ThreadByUUID(uuid string) (conv Thread, err error) {
   db := db()
   defer db.Close()  
-  conv = Conversation{}
-  err = db.QueryRow("SELECT id, uuid, topic, user_id, created_at FROM conversations WHERE uuid = $1", uuid).
+  conv = Thread{}
+  err = db.QueryRow("SELECT id, uuid, topic, user_id, created_at FROM threads WHERE uuid = $1", uuid).
         Scan(&conv.Id, &conv.Uuid, &conv.Topic, &conv.UserId, &conv.CreatedAt)  
   return
 }
 
 
-// Get the user who started this conversation
-func (conversation *Conversation) User() (user User) {
+// Get the user who started this thread
+func (thread *Thread) User() (user User) {
   db := db()
   defer db.Close()  
   user = User{}
-  db.QueryRow("SELECT id, uuid, name, email, created_at FROM users WHERE id = $1", conversation.UserId).
+  db.QueryRow("SELECT id, uuid, name, email, created_at FROM users WHERE id = $1", thread.UserId).
      Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt)  
   return    
 }

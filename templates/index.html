@@ -1,6 +1,6 @@
 {{ define "content" }}
 <p class="lead">
-  <a href="/conversation/new">Start a conversation</a> or join one below!
+  <a href="/thread/new">Start a thread</a> or join one below!
 </p>
 
 {{ range . }}
@@ -9,9 +9,9 @@
       <span class="lead"> <i class="fa fa-comment-o"></i> {{ .Topic }}</span>
     </div>
     <div class="panel-body">
-      Started by {{ .User.Name }} - {{ .CreatedAtDate }} - {{ .NumReplies }} replies.
+      Started by {{ .User.Name }} - {{ .CreatedAtDate }} - {{ .NumReplies }} posts.
       <div class="pull-right">
-        <a href="/conversation/read?id={{.Uuid }}">Read more</a>
+        <a href="/thread/read?id={{.Uuid }}">Read more</a>
       </div>
     </div>
   </div>

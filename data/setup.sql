@@ -1,5 +1,8 @@
-
+drop table posts;
+drop table threads;
+drop table sessions;
 drop table users;
+
 
 create table users (
   id         serial primary key,
@@ -10,8 +13,6 @@ create table users (
   created_at timestamp not null   
 );
 
-drop table sessions;
-
 create table sessions (
   id         serial primary key,
   uuid       varchar(64) not null unique,
@@ -20,22 +21,19 @@ create table sessions (
   created_at timestamp not null   
 );
 
-drop table conversations;
-
-create table conversations (
+create table threads (
   id         serial primary key,
   uuid       varchar(64) not null unique,
   topic      text,
   user_id    integer references users(id),
   created_at timestamp not null       
 );
-drop table replies;
 
-create table replies (
-  id              serial primary key,
-  uuid            varchar(64) not null unique,
-  body            text,
-  user_id         integer references users(id),
-  conversation_id integer references conversations(id),
-  created_at      timestamp not null  
+create table posts (
+  id         serial primary key,
+  uuid       varchar(64) not null unique,
+  body       text,
+  user_id    integer references users(id),
+  thread_id  integer references threads(id),
+  created_at timestamp not null  
 );

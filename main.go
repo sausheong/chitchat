@@ -30,11 +30,11 @@ func main() {
   mux.HandleFunc("/signup_account", signupAccount)
   mux.HandleFunc("/authenticate", authenticate)
 
-  // defined in route_conversation.go
-  mux.HandleFunc("/conversation/new", newConversation)
-  mux.HandleFunc("/conversation/create", createConversation)
-  mux.HandleFunc("/conversation/reply", replyConversation)
-  mux.HandleFunc("/conversation/read", readConversation)
+  // defined in route_thread.go
+  mux.HandleFunc("/thread/new", newThread)
+  mux.HandleFunc("/thread/create", createThread)
+  mux.HandleFunc("/thread/post", postThread)
+  mux.HandleFunc("/thread/read", readThread)
 
   // starting up the server
   server := &http.Server{
