@@ -12,7 +12,7 @@ type Thread struct {
   CreatedAt time.Time
 }
 
-type Reply struct {
+type Post struct {
   Id             int
   Uuid           string
   Body           string
@@ -26,16 +26,16 @@ func (thread *Thread) CreatedAtDate() string {
 	return thread.CreatedAt.Format("Jan 2, 2006 at 3:04pm")
 }
 
-func (reply *Reply) CreatedAtDate() string {
-	return reply.CreatedAt.Format("Jan 2, 2006 at 3:04pm")
+func (post *Post) CreatedAtDate() string {
+	return post.CreatedAt.Format("Jan 2, 2006 at 3:04pm")
 }
 
 
-// get the number of replies in a thread
+// get the number of posts in a thread
 func (thread *Thread) NumReplies() (count int) {
   db := db()
   defer db.Close()  
-  rows, err := db.Query("SELECT count(*) FROM replies where thread_id = $1", thread.Id)
+  rows, err := db.Query("SELECT count(*) FROM posts where thread_id = $1", thread.Id)
   if err != nil {
     return
   }
@@ -48,20 +48,20 @@ func (thread *Thread) NumReplies() (count int) {
   return  
 }
 
-// get replies to a thread
-func (thread *Thread) Replies() (replies []Reply, err error) {
+// get posts to a thread
+func (thread *Thread) Posts() (posts []Post, err error) {
   db := db()
   defer db.Close()  
-  rows, err := db.Query("SELECT id, uuid, body, user_id, thread_id, created_at FROM replies where thread_id = $1", thread.Id)
+  rows, err := db.Query("SELECT id, uuid, body, user_id, thread_id, created_at FROM posts where thread_id = $1", thread.Id)
   if err != nil {
     return
   }
   for rows.Next() {
-    reply := Reply{}
-    if err = rows.Scan(&reply.Id, &reply.Uuid, &reply.Body, &reply.UserId, &reply.ThreadId, &reply.CreatedAt); err != nil {
+    post := Post{}
+    if err = rows.Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt); err != nil {
       return
     }
-    replies = append(replies, reply)
+    posts = append(posts, post)
   }
   rows.Close()
   return  
@@ -87,18 +87,18 @@ func (user *User) CreateThread(topic string) (conv Thread, err error) {
 
 
 
-// Create a new reply to a thread
-func (user *User) CreatePost(conv Thread, body string) (reply Reply, err error) {
+// Create a new post to a thread
+func (user *User) CreatePost(conv Thread, body string) (post Post, err error) {
   db := db()
   defer db.Close()
-  statement := "insert into replies (uuid, body, user_id, thread_id, created_at) values ($1, $2, $3, $4, $5) returning id, uuid, body, user_id, thread_id, created_at"
+  statement := "insert into posts (uuid, body, user_id, thread_id, created_at) values ($1, $2, $3, $4, $5) returning id, uuid, body, user_id, thread_id, created_at"
   stmt, err := db.Prepare(statement)
   if err != nil {
     return
   }
   defer stmt.Close()
   // use QueryRow to return a row and scan the returned id into the Session struct
-  err = stmt.QueryRow(createUUID(), body, user.Id, conv.Id, time.Now()).Scan(&reply.Id, &reply.Uuid, &reply.Body, &reply.UserId, &reply.ThreadId, &reply.CreatedAt)
+  err = stmt.QueryRow(createUUID(), body, user.Id, conv.Id, time.Now()).Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt)
   if err != nil {
     return
   }    
@@ -145,12 +145,12 @@ func (thread *Thread) User() (user User) {
   return    
 }
 
-// Get the user who wrote the reply
-func (reply *Reply) User() (user User) {
+// Get the user who wrote the post
+func (post *Post) User() (user User) {
   db := db()
   defer db.Close()  
   user = User{}
-  db.QueryRow("SELECT id, uuid, name, email, created_at FROM users WHERE id = $1", reply.UserId).
+  db.QueryRow("SELECT id, uuid, name, email, created_at FROM users WHERE id = $1", post.UserId).
      Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt)  
   return    
 }

@@ -12,18 +12,18 @@ func main() {
   mux := http.NewServeMux()
   files := http.FileServer(http.Dir(config.Static))
   mux.Handle("/static/", http.StripPrefix("/static/", files))
-  
+
   //
   // all route patterns matched here
   // route handler functions defined in other files
   //
-  
+
   // index
   mux.HandleFunc("/", index)
   // error
   mux.HandleFunc("/err", err)
-  
-  // defined in route_auth.go  
+
+  // defined in route_auth.go
   mux.HandleFunc("/login", login)
   mux.HandleFunc("/logout", logout)
   mux.HandleFunc("/signup", signup)
@@ -44,5 +44,5 @@ func main() {
     WriteTimeout:   time.Duration(config.WriteTimeout * int64(time.Second)),
     MaxHeaderBytes: 1 << 20,
   }
-  server.ListenAndServe()      
+  server.ListenAndServe()
 }

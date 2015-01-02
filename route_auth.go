@@ -2,7 +2,6 @@ package main
 
 import (
   "net/http"
-  "time"
   "chitchat/data"
 )
 
@@ -10,6 +9,7 @@ import (
 // GET /login
 // Show the login page
 func login(writer http.ResponseWriter, request *http.Request) {
+  
   t := parseTemplateFiles("login.layout", "public.navbar", "login")
   t.Execute(writer, nil)
 }
@@ -17,8 +17,7 @@ func login(writer http.ResponseWriter, request *http.Request) {
 // GET /signup
 // Show the signup page
 func signup(writer http.ResponseWriter, request *http.Request) {
-  t := parseTemplateFiles("login.layout", "public.navbar", "signup")
-  t.Execute(writer, nil)  
+  generateHTML(writer, nil, "login.layout", "public.navbar", "signup")
 }
 
 // POST /signup
@@ -47,7 +46,6 @@ func authenticate(writer http.ResponseWriter, request *http.Request) {
   if err != nil {
     danger(err, "Cannot find user")
   }
-
   if user.Password == data.Encrypt(request.PostFormValue("password")) {
     session, err := user.CreateSession()
     if err != nil {
@@ -56,7 +54,6 @@ func authenticate(writer http.ResponseWriter, request *http.Request) {
     cookie := http.Cookie{
       Name:      "_cookie", 
       Value:     session.Uuid,
-      Expires:   time.Now().Add(90 * time.Minute),
       HttpOnly:  true,
     }
     http.SetCookie(writer, &cookie)

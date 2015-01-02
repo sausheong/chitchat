@@ -3,7 +3,6 @@ package main
 import (
   "fmt"
   "net/http"
-  "html/template"
   "chitchat/data"
 )
 
@@ -15,8 +14,7 @@ func newThread(writer http.ResponseWriter, request *http.Request) {
   if err != nil {
     http.Redirect(writer, request, "/login", 302)
   } else {
-    t := parseTemplateFiles("layout", "private.navbar", "new.thread")
-    t.Execute(writer, nil)      
+    generateHTML(writer, nil, "layout", "private.navbar", "new.thread")
   }
 }
 
@@ -47,17 +45,15 @@ func createThread(writer http.ResponseWriter, request *http.Request) {
 func readThread(writer http.ResponseWriter, request *http.Request) {
   vals := request.URL.Query()
   uuid := vals.Get("id")
-  _, err := session(writer, request)
-  var t *template.Template
-  if err != nil {
-    t = parseTemplateFiles("layout", "public.navbar", "thread")
-  } else {
-    t = parseTemplateFiles("layout", "private.navbar", "thread")    
-  }
   thread, err := data.ThreadByUUID(uuid); if err != nil {
     error_message(writer, request, "Cannot read thread")
   } else {
-    t.Execute(writer, &thread)  
+    _, err := session(writer, request)
+    if err != nil {
+      generateHTML(writer, &thread, "layout", "public.navbar", "public.thread")
+    } else {
+      generateHTML(writer, &thread, "layout", "private.navbar", "private.thread")
+    }
   }
 }
 

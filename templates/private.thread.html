@@ -9,7 +9,7 @@
 
   </div>
   
-  {{ range .Replies }}
+  {{ range .Posts }}
   <div class="panel-body">
     <span class="lead"> <i class="fa fa-comment"></i> {{ .Body }}</span>
     <div class="pull-right">
@@ -23,7 +23,7 @@
 
   <div class="panel panel-info">
     <div class="panel-body">
-     <form role="form" action="/thread/reply" method="post">
+     <form role="form" action="/thread/post" method="post">
        <div class="form-group">
          <textarea class="form-control" name="body" id="body" placeholder="Write your reply here" rows="3"></textarea>
          <input type="hidden" name="uuid" value="{{ .Uuid }}">
