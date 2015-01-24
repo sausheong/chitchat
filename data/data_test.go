@@ -3,9 +3,9 @@ package data
 // test data
 var users  = []User{
   {
-    Name: "Sau Sheong",
-    Email: "sausheong@gmail.com",
-    Password: "password",
+    Name: "Peter Jones",
+    Email: "peter@gmail.com",
+    Password: "peter_pass",
   },
   {
     Name: "John Smith",
